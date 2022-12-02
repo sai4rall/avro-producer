@@ -1,0 +1,32 @@
+{
+  "type": "record",
+  "name": "Value",
+  "namespace": "avro.com.sai.ibmmq.raw",
+  "fields": [
+    {
+      "name":"messageId",
+      "type":{
+        "connect.doc": "message ID",
+        "type": "string"
+      }
+    },
+    {
+      "name": "messageType",
+      "type": {
+        "connect.doc" :"messageType",
+        "type":"string"
+      }
+    },
+    {
+      "default": null,
+      "name": "text",
+      "type": [
+        "null",
+        {
+          "connect.doc": "test doc",
+          "type" : "string"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+buildscript {
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven { url 'https://plugins.gradle.org/m2/' }
+    }
+    dependencies {
+        //plugin needed to generate POJO from Avro schema
+        classpath("com.commercehub.gradle.plugin:gradle-avro-plugin:0.14.2")
+    }
+}
+
+plugins {
+    id 'org.springframework.boot' version '2.5.4'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'java'
+}
+apply plugin: "com.commercehub.gradle.plugin.avro-base"
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+repositories {
+
+    mavenCentral()
+    maven { url "https://packages.confluent.io/maven/"}
+}
+
+dependencies {
+// https://mvnrepository.com/artifact/org.apache.avro/avro
+    implementation group: 'org.apache.avro', name: 'avro', version: '1.10.2'
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.apache.kafka:kafka-streams'
+    // https://mvnrepository.com/artifact/com.github.javafaker/javafaker
+    implementation group: 'com.github.javafaker', name: 'javafaker', version: '1.0.2'
+    implementation group: 'org.apache.kafka', name: 'kafka-clients', version: '2.6.0'
+// https://mvnrepository.com/artifact/io.confluent/kafka-avro-serializer
+    implementation group: 'io.confluent', name: 'kafka-avro-serializer', version: '5.3.0'
+
+    implementation group: 'org.apache.avro', name: 'avro', version: '1.11.0'
+    implementation group: 'org.apache.avro', name: 'avro-tools', version: '1.11.0'
+    implementation 'org.springframework.kafka:spring-kafka'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+}
+
+test {
+    useJUnitPlatform()
+}
+//gradle-avro-plugin setting
+avro {
+    //convert all string type to "java.lang.CharSequence"
+    stringType = "CharSequence"
+}
+
+task generateAvro(type: com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask) {
+    //point plugin to folder with avro schemas
+    source("src/main/resources/avros")
+    //point plugin to folder with generated POJOs
+    outputDir = file("src/main/java")
+}
+
+compileJava.source(generateAvro.outputs)
+
+task customFatJar(type: Jar) {
+    manifest {
+        attributes 'Main-Class': 'com.sai.SchemaReg'
+    }
+    baseName = 'avro-producer-all-in-one-jar'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
